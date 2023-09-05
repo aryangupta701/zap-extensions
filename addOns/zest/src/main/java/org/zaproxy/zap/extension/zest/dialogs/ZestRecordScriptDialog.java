@@ -38,6 +38,7 @@ import org.zaproxy.zap.extension.script.ScriptNode;
 import org.zaproxy.zap.extension.script.ScriptType;
 import org.zaproxy.zap.extension.script.ScriptWrapper;
 import org.zaproxy.zap.extension.selenium.Browser;
+import org.zaproxy.zap.extension.selenium.BrowserExtension;
 import org.zaproxy.zap.extension.selenium.ExtensionSelenium;
 import org.zaproxy.zap.extension.zest.ExtensionZest;
 import org.zaproxy.zap.extension.zest.ZestScriptWrapper;
@@ -196,17 +197,31 @@ public class ZestRecordScriptDialog extends StandardFieldsDialog {
     }
 
     private void launchBrowser(String url, String browserName) {
+        browserName = browserName.toLowerCase(Locale.ROOT); 
         ExtensionSelenium extSelenium =
                 Control.getSingleton().getExtensionLoader().getExtension(ExtensionSelenium.class);
+        Browser browser; 
+        if(browserName == Browser.CHROME.getId()){
+            browser = Browser.CHROME;
+        }
+        else {
+            browser = Browser.FIREFOX;
+        }
+        List<BrowserExtension> browserExtensions = extSelenium.getOptions().getBrowserExtensions();
+        List<BrowserExtension> enabledBrowserExtensions = extSelenium.getOptions().getEnabledBrowserExtensions(browser); 
+
+        extSelenium.getOptions().setBrowserExtensions(browserExtensions);
         try {
             WebDriver wd = extSelenium.getProxiedBrowserByName(browserName);
             wd.get(url);
         } catch (RuntimeException e) {
             String msg =
                     extSelenium.getWarnMessageFailedToStart(
-                            browserName.toLowerCase(Locale.ROOT), e);
+                            browserName, e);
             cancelPressed();
             View.getSingleton().showWarningDialog(msg);
+        } finally {
+            extSelenium.getOptions().setBrowserExtensions(enabledBrowserExtensions);
         }
     }
 

@@ -508,7 +508,7 @@ public class ExtensionSelenium extends ExtensionAdaptor {
         }
     }
 
-    private SeleniumOptions getOptions() {
+    public SeleniumOptions getOptions() {
         if (options == null) {
             options = new SeleniumOptions();
         }

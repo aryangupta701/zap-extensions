@@ -209,8 +209,22 @@ public class ZestRecordScriptDialog extends StandardFieldsDialog {
         }
         List<BrowserExtension> browserExtensions = extSelenium.getOptions().getBrowserExtensions();
         List<BrowserExtension> enabledBrowserExtensions = extSelenium.getOptions().getEnabledBrowserExtensions(browser); 
-
-        extSelenium.getOptions().setBrowserExtensions(browserExtensions);
+        boolean containZapExtension = false;
+        for(BrowserExtension extension : enabledBrowserExtensions){
+            if(extension.getPath().toFile().getName().contains("zap") && extension.getBrowser() == browser){
+                containZapExtension = true; 
+                break; 
+            }
+        }
+        if(!containZapExtension) {
+            for(BrowserExtension extension : browserExtensions){
+                if(extension.getPath().toFile().getName().contains("zap") && extension.getBrowser() == browser){
+                    extension.setEnabled(true); 
+                    break;
+                }
+            }
+        }
+        
         try {
             WebDriver wd = extSelenium.getProxiedBrowserByName(browserName);
             wd.get(url);
@@ -221,7 +235,14 @@ public class ZestRecordScriptDialog extends StandardFieldsDialog {
             cancelPressed();
             View.getSingleton().showWarningDialog(msg);
         } finally {
-            extSelenium.getOptions().setBrowserExtensions(enabledBrowserExtensions);
+            if(!containZapExtension) {
+                for(BrowserExtension extension : browserExtensions){
+                    if(extension.getPath().toFile().getName().contains("zap") && extension.getBrowser() == browser){
+                        extension.setEnabled(false); 
+                        break;
+                    }
+                }
+            }
         }
     }
 

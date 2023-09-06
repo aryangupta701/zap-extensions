@@ -62,6 +62,8 @@ public class ZestRecordScriptDialog extends StandardFieldsDialog {
     private static final String FIELD_CLIENT_NODE = "zest.dialog.script.label.clientnode";
     private static final String FIELD_BROWSER = "zest.dialog.script.label.browser";
     private static final String ERROR_CLIENT = "zest.dialog.script.error.client";
+    private static final String ERROR_ZAP_EXTENSION = "zest.dialog.script.error.zap.extension";
+    
     private static final String THREAD_PREFIX = "ZAP-client-browser-";
 
     private int threadId = 1;
@@ -197,32 +199,21 @@ public class ZestRecordScriptDialog extends StandardFieldsDialog {
     }
 
     private void launchBrowser(String url, String browserName) {
-        browserName = browserName.toLowerCase(Locale.ROOT); 
+        String browserId =  browserName.toLowerCase(Locale.ROOT); 
         ExtensionSelenium extSelenium =
                 Control.getSingleton().getExtensionLoader().getExtension(ExtensionSelenium.class);
-        Browser browser; 
-        if(browserName == Browser.CHROME.getId()){
-            browser = Browser.CHROME;
-        }
-        else {
-            browser = Browser.FIREFOX;
-        }
         List<BrowserExtension> browserExtensions = extSelenium.getOptions().getBrowserExtensions();
-        List<BrowserExtension> enabledBrowserExtensions = extSelenium.getOptions().getEnabledBrowserExtensions(browser); 
         boolean containZapExtension = false;
-        for(BrowserExtension extension : enabledBrowserExtensions){
-            if(extension.getPath().toFile().getName().contains("zap") && extension.getBrowser() == browser){
+        for(BrowserExtension extension : browserExtensions){
+            if(extension.isEnabled() && extension.getPath().toFile().getName().contains("zap") && extension.getBrowser().getId() == browserId){
                 containZapExtension = true; 
                 break; 
             }
         }
         if(!containZapExtension) {
-            for(BrowserExtension extension : browserExtensions){
-                if(extension.getPath().toFile().getName().contains("zap") && extension.getBrowser() == browser){
-                    extension.setEnabled(true); 
-                    break;
-                }
-            }
+            LOGGER.warn(ERROR_ZAP_EXTENSION);
+            View.getSingleton().showWarningDialog(Constant.messages.getString(ERROR_ZAP_EXTENSION));
+            return;
         }
         
         try {
@@ -231,18 +222,9 @@ public class ZestRecordScriptDialog extends StandardFieldsDialog {
         } catch (RuntimeException e) {
             String msg =
                     extSelenium.getWarnMessageFailedToStart(
-                            browserName, e);
+                           browserId, e);
             cancelPressed();
             View.getSingleton().showWarningDialog(msg);
-        } finally {
-            if(!containZapExtension) {
-                for(BrowserExtension extension : browserExtensions){
-                    if(extension.getPath().toFile().getName().contains("zap") && extension.getBrowser() == browser){
-                        extension.setEnabled(false); 
-                        break;
-                    }
-                }
-            }
         }
     }
 

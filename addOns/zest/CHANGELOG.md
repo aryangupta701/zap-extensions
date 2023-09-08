@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [39] - 2023-07-11
 ### Added 
+- Check to warn user if the ZAP browser extension is not present before recording a Zest script.
 - Dialogs for scroll, scrollTo, window resize and mouse over.
 
 ### Changed

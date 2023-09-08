@@ -202,20 +202,6 @@ public class ZestRecordScriptDialog extends StandardFieldsDialog {
         String browserId =  browserName.toLowerCase(Locale.ROOT); 
         ExtensionSelenium extSelenium =
                 Control.getSingleton().getExtensionLoader().getExtension(ExtensionSelenium.class);
-        List<BrowserExtension> browserExtensions = extSelenium.getOptions().getBrowserExtensions();
-        boolean containZapExtension = false;
-        for(BrowserExtension extension : browserExtensions){
-            if(extension.isEnabled() && extension.getPath().toFile().getName().contains("zap") && extension.getBrowser().getId() == browserId){
-                containZapExtension = true; 
-                break; 
-            }
-        }
-        if(!containZapExtension) {
-            LOGGER.warn(ERROR_ZAP_EXTENSION);
-            View.getSingleton().showWarningDialog(Constant.messages.getString(ERROR_ZAP_EXTENSION));
-            return;
-        }
-        
         try {
             WebDriver wd = extSelenium.getProxiedBrowserByName(browserName);
             wd.get(url);
@@ -230,6 +216,25 @@ public class ZestRecordScriptDialog extends StandardFieldsDialog {
 
     @Override
     public void save() {
+        // Check for ZAP Browser Extension
+        String browser = this.getStringValue(FIELD_BROWSER);
+        String browserId =  browser.toLowerCase(Locale.ROOT);
+        ExtensionSelenium extSelenium =
+                Control.getSingleton().getExtensionLoader().getExtension(ExtensionSelenium.class);
+        List<BrowserExtension> browserExtensions = extSelenium.getOptions().getBrowserExtensions();
+        boolean containZapExtension = false;
+        for(BrowserExtension extension : browserExtensions){
+            if(extension.isEnabled() && extension.getPath().toFile().getName().contains("zap") && extension.getBrowser().getId() == browserId){
+                containZapExtension = true; 
+                break; 
+            }
+        }
+
+        if(!containZapExtension) {
+            LOGGER.warn(ERROR_ZAP_EXTENSION);
+            View.getSingleton().showWarningDialog(Constant.messages.getString(ERROR_ZAP_EXTENSION));
+            return;
+        }
         // Create a new script
 
         ScriptWrapper sw = new ScriptWrapper();
@@ -278,7 +283,6 @@ public class ZestRecordScriptDialog extends StandardFieldsDialog {
                 return;
             }
             String url = this.getStringValue(FIELD_CLIENT_NODE);
-            String browser = this.getStringValue(FIELD_BROWSER);
             extension.startClientRecording(url);
             Thread browserThread =
                     new Thread(() -> launchBrowser(url, browser), THREAD_PREFIX + threadId++);
